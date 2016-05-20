@@ -1,0 +1,125 @@
+#!/usr/bin/env perl6
+
+use v6;
+#use DBSM;
+use Config::Simple;
+use JSON::Tiny;
+use Term::ANSIColor;
+
+# Constants
+my @db_clients = "mysql", "pgsql", "mongo";
+my $config_dir = $*HOME ~ "/.dbms";
+my $config_file = $config_dir ~ "/config";
+my $project_root = $config_dir ~ "/projects";
+
+# Pass
+my $pass_command = "/usr/bin/pass";
+my $pass_generate = $pass_command ~ " generate -c ";
+my $pass_insert = $pass_command ~ " insert ";
+my $pass_edit = $pass_command ~ " edit ";
+my $pass_show = $pass_command ~ " show ";
+my $pass_pw_len = 40;
+my $pass_prefix = "dbms";
+
+# Script Editor
+my $editor = "/usr/bin/env vim";
+my $scripts_root = $config_dir ~ "/scripts";
+
+# MySQL
+my $mysql_command = "/usr/bin/mysql";
+
+#sub USAGE() {
+#	say "\nUsage:\n";
+#
+#	say "  Create a new project: \n";
+#	say "\tdbsm init <connection_name> <project_name>";
+#	say "\tValid <connection_name>: {@db_clients.join(', ')}\n";
+#
+#	say "  Move / rename project:\n";
+#  say "\tdbsm mv Projects/<project_name> Projects/<new_project_name>\n";
+#
+#	say "  Delete project\n";
+#  say "\tdbsm rm Projects/<project_name>\n";
+#}
+
+sub project_exists(Str $project_name) {
+	my $conf = Config::Simple.read($config_file, :f<ini>);
+	return $conf{$project_name}.defined;
+}
+
+sub path_exists(Str $path, Str $type) {
+	return $path.IO !~~ $type;
+}
+
+sub script_path(Str $project_name, Str $script_name) {
+	my $script_folder = $scripts_root ~ "/$project_name";
+	if !path_exists($script_folder, ":d") { mkdir $script_folder }
+	return $script_folder ~ "/$script_name";
+}
+
+multi MAIN('init', Str $project_name, Str $db_type where { so $db_type ∈ @db_clients }, :$generate?, :$pw_len?) {
+
+	my $db_host = prompt("Please enter DB host: ");
+	my $db_name = prompt("Please enter DB name: ");
+	my $username = prompt("Please enter DB username: ");
+
+	# Create config entry
+  my $conf = Config::Simple.new(:f<ini>); 
+  $conf.filename = $config_file;
+	$conf{$project_name}<db_type> = $db_type;
+	$conf{$project_name}<db_host> = $db_host;
+	$conf{$project_name}<db_name> = $db_name;
+	$conf{$project_name}<username> = $username;
+	$conf.write();
+
+	# Store password in pass
+	if ($generate) {
+		my $len = $pw_len ?? $pw_len !! $pass_pw_len;
+		shell("$pass_generate $pass_prefix/$project_name/$db_name"~"_"~$username~" $len");
+	} else {
+		shell("$pass_insert $pass_prefix/$project_name/$db_name"~"_"~$username);
+	}
+
+}
+
+multi MAIN('script', 'add', Str $project_name, Str $script_name;) {
+
+	if (!project_exists $project_name) {
+		return say("Project $project_name doesn't exist. See ./dbms init");
+	}
+
+	my $script_path = script_path $project_name, $script_name;
+  my $to_edit = 'y';
+	
+	if ($script_path.IO ~~ :f) { 
+		$to_edit = prompt("Script already exists. Edit? (yN)");
+  }
+
+	return if $to_edit.match(/n|N/);
+
+	shell($editor ~ " $script_path");
+	say "New script, $script_path, added";
+
+}
+
+multi MAIN('run', Str $project_name, Str $script_name) {
+
+	if (!project_exists $project_name) {
+		return say("Project $project_name doesn't exist. See ./dbms init");
+	}
+
+	my $script_path = script_path $project_name, $script_name;
+
+	if (!path_exists $script_path, ":f") {
+		return say("Script, $script_name, doesn't exist. See ./dbms script add");
+	}
+
+	my $conf = Config::Simple.read($config_file, :f<ini>);
+	my $db_host = $conf{$project_name}<db_host>;
+	my $db_name = $conf{$project_name}<db_name>;
+	my $username = $conf{$project_name}<username>;
+
+  my $pass = shell("$pass_show $pass_prefix/$project_name/$db_name"~"_"~$username, :out).out.slurp-rest;
+	shell("$mysql_command -h$db_host -u$username -p$pass $db_name $script_path");
+	
+}

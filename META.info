@@ -1,0 +1,10 @@
+{
+    "name" : "dbsm",
+    "version"  : "0.0.1",
+    "description" : "Multi-DB script manager / runner",
+    "provides" : {
+    },
+    "author" : "Sam Morrison <sam@cnstechgroup.com>",
+    "depends" : [ "Config::Simple", "JSON::Tiny", "HTTP::UserAgent", "Term::ANSIColor", "IO::Socket::SSL" ],
+    "source-url" : "git://github.com/cnstechnicalgroup/dbsm.git"
+}
