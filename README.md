@@ -6,6 +6,14 @@ dbsm
 # Getting started
 
 ```
+Usage:
+  ./bin/dbsm [--generate=<Any>] [--pw_len=<Any>] init <project_name> <environment> <db_type> 
+  ./bin/dbsm script add <project_name> <script_name> 
+  ./bin/dbsm script run <project_name> <environment> <script_name>
+
+
+# Below is for cleanup...
+
 #
 # Initial setup
 #

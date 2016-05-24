@@ -44,7 +44,7 @@ my $mysql_command = "/usr/bin/mysql";
 
 sub project_exists(Str $project_name) {
 	my $conf = Config::Simple.read($config_file, :f<ini>);
-	return $conf{$project_name}.defined;
+  return $conf.hash.keys.grep({ / $project_name / }).elems > 0;
 }
 
 sub path_exists(Str $path, Str $type) {
@@ -57,35 +57,49 @@ sub script_path(Str $project_name, Str $script_name) {
 	return $script_folder ~ "/$script_name";
 }
 
-multi MAIN('init', Str $project_name, Str $db_type where { so $db_type ∈ @db_clients }, :$generate?, :$pw_len?) {
+multi MAIN('init',
+           Str $project_name,
+           Str $environment,
+           Str $db_type where { so $db_type ∈ @db_clients },
+           :$generate?, :$pw_len?) {
+
+  my $conf;
+
+	# Create config entry
+  if (path_exists($config_file, ':f')) {
+    say "Reading from config...";
+    $conf = Config::Simple.read($config_file, :f<ini>);
+	} else {
+    say "Creating config...";
+	  $conf = Config::Simple.new(:f<ini>);
+    $conf.filename = $config_file;
+	}
 
 	my $db_host = prompt("Please enter DB host: ");
 	my $db_name = prompt("Please enter DB name: ");
-	my $username = prompt("Please enter DB username: ");
+	my $user_name = prompt("Please enter DB user_name: ");
 
-	# Create config entry
-  my $conf = Config::Simple.new(:f<ini>); 
-  $conf.filename = $config_file;
-	$conf{$project_name}<db_type> = $db_type;
-	$conf{$project_name}<db_host> = $db_host;
-	$conf{$project_name}<db_name> = $db_name;
-	$conf{$project_name}<username> = $username;
+	$conf{"$project_name $environment"}<db_type> = $db_type;
+	$conf{"$project_name $environment"}<db_host> = $db_host;
+	$conf{"$project_name $environment"}<db_name> = $db_name;
+	$conf{"$project_name $environment"}<user_name> = $user_name;
 	$conf.write();
 
 	# Store password in pass
+  my $pass_entry = "$pass_prefix/$project_name/$environment/$db_name/$user_name";
 	if ($generate) {
 		my $len = $pw_len ?? $pw_len !! $pass_pw_len;
-		shell("$pass_generate $pass_prefix/$project_name/$db_name"~"_"~$username~" $len");
+		shell("$pass_generate $pass_entry $len");
 	} else {
-		shell("$pass_insert $pass_prefix/$project_name/$db_name"~"_"~$username);
+		shell("$pass_insert $pass_entry");
 	}
 
 }
 
 multi MAIN('script', 'add', Str $project_name, Str $script_name;) {
 
-	if (!project_exists $project_name) {
-		return say("Project $project_name doesn't exist. See ./dbms init");
+	if (!project_exists "$project_name") {
+		return say("Project [$project_name] doesn't exist. See ./dbms init");
 	}
 
 	my $script_path = script_path $project_name, $script_name;
@@ -102,10 +116,10 @@ multi MAIN('script', 'add', Str $project_name, Str $script_name;) {
 
 }
 
-multi MAIN('run', Str $project_name, Str $script_name) {
+multi MAIN('script', 'run', Str $project_name, Str $environment, Str $script_name) {
 
-	if (!project_exists $project_name) {
-		return say("Project $project_name doesn't exist. See ./dbms init");
+	if (!project_exists "$project_name $environment") {
+		return say("Project [$project_name $environment] doesn't exist. See ./dbms init");
 	}
 
 	my $script_path = script_path $project_name, $script_name;
@@ -115,11 +129,11 @@ multi MAIN('run', Str $project_name, Str $script_name) {
 	}
 
 	my $conf = Config::Simple.read($config_file, :f<ini>);
-	my $db_host = $conf{$project_name}<db_host>;
-	my $db_name = $conf{$project_name}<db_name>;
-	my $username = $conf{$project_name}<username>;
+	my $db_host = $conf{"$project_name $environment"}<db_host>;
+	my $db_name = $conf{"$project_name $environment"}<db_name>;
+	my $user_name = $conf{"$project_name $environment"}<user_name>;
 
-  my $pass = shell("$pass_show $pass_prefix/$project_name/$db_name"~"_"~$username, :out).out.slurp-rest;
-	shell("$mysql_command -h$db_host -u$username -p$pass $db_name $script_path");
-	
+  my $pass = shell("$pass_show $pass_prefix/$project_name/$environment/$db_name/$user_name", :out).out.slurp-rest.chomp();
+	shell("$mysql_command -h $db_host -u $user_name -p$pass $db_name < $script_path");
+
 }
