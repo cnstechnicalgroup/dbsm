@@ -90,7 +90,7 @@ Requirements
 
 * [Perl 6](http://perl6.org/)
 * [Password Store](https://www.passwordstore.org/)
-* [GnuGPG](https://gnupg.org/)
+* [GnuPG](https://gnupg.org/)
 * [Git](https://git-scm.com/)
 
 
