@@ -26,6 +26,35 @@ Usage:
 
 ```
 
+Examples
+========
+
+## Create a new project
+
+Specify the project name, environment, and database type (currently only `mysql` supported. Environment naming convention is up to user. For example, there is no requirement to use `dev, stage, test` vs `level1, level2, level3`.
+
+```
+./bin/dbsm init webproject1 dev mysql
+```
+
+## Add script to project
+
+Scripts are available to all `environtments` so only require a project name and script name to create:
+
+```
+./bin/dbsm script add webproject1 top10cities.sql
+```
+
+The user's editor (defined in the user's $EDITOR env var) will open the script for editing. If the script already exists for the specified project then the user will be prompted to edit the script or cancel.
+
+## Run script
+
+Run a script under the context of a project's environment:
+
+```
+./bin/dbsm script run webapp1 dev top10projects.sql
+```
+
 Installation
 ============
 
