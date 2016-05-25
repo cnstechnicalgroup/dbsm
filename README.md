@@ -9,13 +9,20 @@ Getting started
 `dbsm` simplifies the management of ad-hoc DB scripts by allowing you to track projects. The three manageable areas are:
 
 * Projects
+
     Name of the project, e.g. `webapp1`
+
   * Environments
+
     Any enrionment name, used for organizing DB connections, e.g `dev`, `stage`, `test`, `prod`, etc... 
+
 * Scripts
+
     Name of DB script. These are stored in `~/.dbms/projects/project/scriptname.sql|js|etc.`
     Each script is edited using $EDITOR editor.
+
 * Database Connections
+
    Specify a Database type for each Project Environment, e.g. `mysql`, `postgresql`, `mongodb`, etc.
 
 ```
