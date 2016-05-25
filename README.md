@@ -6,7 +6,7 @@ dbsm
 Getting started
 ===============
 
-`dbsm` simplifies the management of ad-hoc DB scripts by allowing you to track projects and manages three areas:
+`dbsm` simplifies the management of ad-hoc DB scripts by allowing you to track projects. The three manageable areas are:
 
 * Projects
     Name of the project, e.g. `webapp1`
