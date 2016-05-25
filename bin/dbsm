@@ -6,7 +6,6 @@ use JSON::Tiny;
 use Term::ANSIColor;
 
 # Constants
-my @db_clients = "mysql", "pgsql", "mongo";
 my $config_dir = $*HOME ~ "/.dbms";
 my $config_file = $config_dir ~ "/config";
 my $project_root = $config_dir ~ "/projects";
@@ -36,25 +35,27 @@ sub project_exists(Str $project_name) {
 }
 
 sub path_exists(Str $path, Str $type) {
-  return $path.IO ~~ $type;
+	if $type ~~ 'f' { return $path.IO ~~ :f }
+	if $type ~~ 'd' { return $path.IO ~~ :d }
 }
 
 sub script_path(Str $project_name, Str $script_name) {
   my $script_folder = $scripts_root ~ "/$project_name";
-  if !path_exists($script_folder, ':d') { mkdir $script_folder }
+  if !path_exists($script_folder, 'd') { mkdir $script_folder }
   return $script_folder ~ "/$script_name";
 }
 
 multi MAIN('init',
            Str $project_name,
            Str $environment,
-           Str $db_type where { so $db_type ∈ @db_clients },
+           Str $db_type where { so $db_type ∈ %dbs.keys },
            :$generate?, :$pw_len?) {
 
   my $conf;
 
   # Create config entry
-  if (path_exists($config_file, ':f')) {
+	say "Config [$config_file] exists?: " ~ path_exists($config_file, ':f');
+  if (path_exists($config_file, 'f')) {
     say "Reading from config...";
     $conf = Config::Simple.read($config_file, :f<ini>);
   } else {
@@ -92,7 +93,7 @@ multi MAIN('script', 'add', Str $project_name, Str $script_name;) {
 
   my $script_path = script_path $project_name, $script_name;
   
-  if (path_exists $script_path, ':f') { 
+  if (path_exists $script_path, 'f') { 
     my $to_edit = 'y';
     $to_edit = prompt("Script already exists. Edit? (yN)");
     return if $to_edit.match(/n|N/);
@@ -111,8 +112,8 @@ multi MAIN('script', 'run', Str $project_name, Str $environment, Str $script_nam
 
   my $script_path = script_path $project_name, $script_name;
 
-  if (path_exists $script_path, ':f') {
-    return say("Script, $script_name, doesn't exist. See ./dbms script add");
+  if (!path_exists $script_path, 'f') {
+    return say("Script, $script_name, doesn't exist. See ./dbms script run");
   }
 
   my $conf = Config::Simple.read($config_file, :f<ini>);
