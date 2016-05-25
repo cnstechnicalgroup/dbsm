@@ -53,7 +53,7 @@ Specify the project name, environment, and database type. Environment naming con
 ./bin/dbsm project list
 ```
 
-## Add script to project
+## Add / edit script to project
 
 Scripts are available to all `environtments` so only require a project name and script name to create:
 
