@@ -26,9 +26,9 @@ my $scripts_root = $config_dir ~ "/scripts";
 
 # DB commands
 my %dbs = mysql => "/usr/bin/env mysql",
-					pgsql => "/usr/bin/env psql",
-					mongo => "/usr/bin/env mongo",
-					redis => "/usr/bin/env redis-cli";
+          pgsql => "/usr/bin/env psql",
+          mongo => "/usr/bin/env mongo",
+          redis => "/usr/bin/env redis-cli";
 
 sub project_exists(Str $project_name) {
   my $conf = Config::Simple.read($config_file, :f<ini>);
