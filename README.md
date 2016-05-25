@@ -25,6 +25,9 @@ Getting started
 
    Specify a Database type for each Project Environment, e.g. `mysql`, `postgresql`, `mongodb`, etc.
 
+Usage
+=====
+
 ```
 Usage:
   ./bin/dbsm [--generate=<Any>] [--pw_len=<Any>] init <project_name> <environment> <db_type> 
