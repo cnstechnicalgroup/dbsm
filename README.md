@@ -81,9 +81,10 @@ panda install .
 Todo
 ====
 
+* Add tests
 * Add `cp`, `mv` to scripts / projects
 * Add additional Database support
-* Add tests
+* Add git support (`init`, `add remote`, `push`, `pull`)
 
 Requirements
 ============
