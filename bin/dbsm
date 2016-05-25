@@ -24,8 +24,11 @@ my $pass_prefix = "dbms";
 my $editor = "/usr/bin/env vim";
 my $scripts_root = $config_dir ~ "/scripts";
 
-# MySQL
-my $mysql_command = "/usr/bin/mysql";
+# DB commands
+my %dbs = mysql => "/usr/bin/env mysql",
+					pgsql => "/usr/bin/env psql",
+					mongo => "/usr/bin/env mongo",
+					redis => "/usr/bin/env redis-cli";
 
 sub project_exists(Str $project_name) {
   my $conf = Config::Simple.read($config_file, :f<ini>);
@@ -33,12 +36,12 @@ sub project_exists(Str $project_name) {
 }
 
 sub path_exists(Str $path, Str $type) {
-  return $path.IO !~~ $type;
+  return $path.IO ~~ $type;
 }
 
 sub script_path(Str $project_name, Str $script_name) {
   my $script_folder = $scripts_root ~ "/$project_name";
-  if !path_exists($script_folder, ":d") { mkdir $script_folder }
+  if !path_exists($script_folder, ':d') { mkdir $script_folder }
   return $script_folder ~ "/$script_name";
 }
 
@@ -88,13 +91,12 @@ multi MAIN('script', 'add', Str $project_name, Str $script_name;) {
   }
 
   my $script_path = script_path $project_name, $script_name;
-  my $to_edit = 'y';
   
-  if ($script_path.IO ~~ :f) { 
+  if (path_exists $script_path, ':f') { 
+    my $to_edit = 'y';
     $to_edit = prompt("Script already exists. Edit? (yN)");
+    return if $to_edit.match(/n|N/);
   }
-
-  return if $to_edit.match(/n|N/);
 
   shell($editor ~ " $script_path");
   say "New script, $script_path, added";
@@ -109,16 +111,17 @@ multi MAIN('script', 'run', Str $project_name, Str $environment, Str $script_nam
 
   my $script_path = script_path $project_name, $script_name;
 
-  if (!path_exists $script_path, ":f") {
+  if (path_exists $script_path, ':f') {
     return say("Script, $script_name, doesn't exist. See ./dbms script add");
   }
 
   my $conf = Config::Simple.read($config_file, :f<ini>);
+  my $db_type = $conf{"$project_name $environment"}<db_type>;
   my $db_host = $conf{"$project_name $environment"}<db_host>;
   my $db_name = $conf{"$project_name $environment"}<db_name>;
   my $user_name = $conf{"$project_name $environment"}<user_name>;
 
   my $pass = shell("$pass_show $pass_prefix/$project_name/$environment/$db_name/$user_name", :out).out.slurp-rest.chomp();
-  shell("$mysql_command -h $db_host -u $user_name -p$pass $db_name < $script_path");
+  shell(%dbs{$db_type} ~ " -h $db_host -u $user_name -p$pass $db_name < $script_path");
 
 }
