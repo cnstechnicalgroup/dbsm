@@ -21,6 +21,7 @@ Getting started
 ```
 Usage:
   ./bin/dbsm [--generate=<Any>] [--pw_len=<Any>] init <project_name> <environment> <db_type> 
+  ./bin/dbsm project list
   ./bin/dbsm script add <project_name> <script_name> 
   ./bin/dbsm script run <project_name> <environment> <script_name>
   ./bin/dbsm script list <project_name>
@@ -32,10 +33,15 @@ Examples
 
 ## Create a new project
 
-Specify the project name, environment, and database type (currently only `mysql` supported. Environment naming convention is up to user. For example, there is no requirement to use `dev, stage, test` vs `level1, level2, level3`.
+Specify the project name, environment, and database type. Environment naming convention is up to user. For example, there is no requirement to use `dev, stage, test` vs `level1, level2, level3`.
 
 ```
 ./bin/dbsm init webproject1 dev mysql
+```
+## List projects
+
+```
+./bin/dbsm project list
 ```
 
 ## Add script to project

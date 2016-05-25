@@ -54,7 +54,6 @@ multi MAIN('init',
   my $conf;
 
   # Create config entry
-	say "Config [$config_file] exists?: " ~ path_exists($config_file, ':f');
   if (path_exists($config_file, 'f')) {
     say "Reading from config...";
     $conf = Config::Simple.read($config_file, :f<ini>);
@@ -83,6 +82,12 @@ multi MAIN('init',
     shell("$pass_insert $pass_entry");
   }
 
+}
+
+multi MAIN('project', 'list') {
+  if !path_exists($config_file, 'f') { return say "No projects exists. See ./dbms init" }
+  my $conf = Config::Simple.read($config_file, :f<ini>);
+  for $conf.hash.keys { .say }
 }
 
 multi MAIN('script', 'add', Str $project_name, Str $script_name;) {
@@ -137,7 +142,6 @@ multi MAIN('script', 'list', Str $project_name) {
   if !path_exists($script_folder, 'd') { return say "No scripts available for $project_name." }
 
   my @scripts = dir $script_folder;
-
   for @scripts { .split('/').tail.Str.say }
 
 }
