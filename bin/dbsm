@@ -126,3 +126,18 @@ multi MAIN('script', 'run', Str $project_name, Str $environment, Str $script_nam
   shell(%dbs{$db_type} ~ " -h $db_host -u $user_name -p$pass $db_name < $script_path");
 
 }
+
+multi MAIN('script', 'list', Str $project_name) {
+
+  if (!project_exists "$project_name") {
+    return say("Project [$project_name] doesn't exist. See ./dbms init");
+  }
+
+  my $script_folder = $scripts_root ~ "/$project_name";
+  if !path_exists($script_folder, 'd') { return say "No scripts available for $project_name." }
+
+  my @scripts = dir $script_folder;
+
+  for @scripts { .split('/').tail.Str.say }
+
+}

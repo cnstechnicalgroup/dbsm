@@ -23,6 +23,7 @@ Usage:
   ./bin/dbsm [--generate=<Any>] [--pw_len=<Any>] init <project_name> <environment> <db_type> 
   ./bin/dbsm script add <project_name> <script_name> 
   ./bin/dbsm script run <project_name> <environment> <script_name>
+  ./bin/dbsm script list <project_name>
 
 ```
 
@@ -53,6 +54,12 @@ Run a script under the context of a project's environment:
 
 ```
 ./bin/dbsm script run webapp1 dev top10projects.sql
+```
+
+## List project's scripts
+
+```
+./bin/dbsm script list webapp1
 ```
 
 Installation
