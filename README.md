@@ -25,7 +25,6 @@ Usage:
   ./bin/dbsm script add <project_name> <script_name> 
   ./bin/dbsm script run <project_name> <environment> <script_name>
   ./bin/dbsm script list <project_name>
-
 ```
 
 Examples
