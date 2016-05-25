@@ -90,7 +90,7 @@ AUTHORS
 COPYRIGHT AND LICENSE
 =====================
 
-Copyright 20166 Sam Morrison
+Copyright 2016 Sam Morrison
 
 This library is free software; you can redistribute it and/or modify it under the Artistic License 2.0.
 
