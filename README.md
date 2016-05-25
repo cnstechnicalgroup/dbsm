@@ -1,7 +1,7 @@
 dbsm
 ====
 
-`dbsm` is a cli DB script manager. It allows for easily managing ad-hoc DB scripts (SQL, NoSQL) as parts of projects and associated with managed `account` configurations. 
+`dbsm` is a cli DB script manager. It allows for easily managing ad-hoc DB scripts (SQL, NoSQL) as parts of projects and associated with managed `environment` configurations. 
 
 Getting started
 ===============
