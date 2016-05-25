@@ -87,7 +87,7 @@ multi MAIN('init',
 multi MAIN('project', 'list') {
   if !path_exists($config_file, 'f') { return say "No projects exists. See ./dbms init" }
   my $conf = Config::Simple.read($config_file, :f<ini>);
-  for $conf.hash.keys { .say }
+  for $conf.hash.keys.sort { .say }
 	#say "Project\t\tEnvironments";
 	#my %projects = [];
   #for $conf.hash.keys.sort -> $project {
