@@ -18,7 +18,7 @@ Getting started
 
 * Scripts
 
-    Name of DB script. These are stored in `~/.dbms/projects/project/scriptname.sql|js|etc.`
+    Name of DB script. These are stored in `~/.dbsm/projects/project/scriptname.sql|js|etc.`
     Each script is edited using $EDITOR editor.
 
 * Database Connections
