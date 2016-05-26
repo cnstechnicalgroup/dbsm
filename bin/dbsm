@@ -9,26 +9,31 @@ use Term::ANSIColor;
 my $config_dir = $*HOME ~ "/.dbsm";
 my $config_file = $config_dir ~ "/config";
 my $project_root = $config_dir ~ "/projects";
-my $git_dir = $config_dir ~ "/.git";
 
-# Pass
-my $pass_command = "/usr/bin/pass";
-my $pass_generate = $pass_command ~ " generate -c ";
-my $pass_insert = $pass_command ~ " insert ";
-my $pass_edit = $pass_command ~ " edit ";
-my $pass_show = $pass_command ~ " show ";
-my $pass_pw_len = 40;
-my $pass_prefix = "dbsm";
-
-# Script Editor
-my $editor = "/usr/bin/env vim";
-my $scripts_root = $config_dir ~ "/scripts";
+# Commands
+my %commands = git => "/usr/bin/env git",
+               pass => "/usr/bin/env pass";
 
 # DB commands
 my %dbs = mysql => "/usr/bin/env mysql",
           pgsql => "/usr/bin/env psql",
           mongo => "/usr/bin/env mongo",
           redis => "/usr/bin/env redis-cli";
+
+# Git
+my $git_dir = $config_dir ~ "/.git";
+
+# Pass
+my $pass_generate = %commands<pass> ~ " generate -c ";
+my $pass_insert = %commands<pass> ~ " insert ";
+my $pass_edit = %commands<pass> ~ " edit ";
+my $pass_show = %commands<pass> ~ " show ";
+my $pass_pw_len = 40;
+my $pass_prefix = "dbsm";
+
+# Script Editor
+my $editor = "/usr/bin/env vim";
+my $scripts_root = $config_dir ~ "/scripts";
 
 sub project_exists(Str $project_name) {
   my $conf = Config::Simple.read($config_file, :f<ini>);
@@ -158,14 +163,14 @@ multi MAIN('script', 'list', Str $project_name) {
 multi MAIN('git', 'init') {
 
   if path_exists($git_dir, 'd') { return say "Git repository already exists [$git_dir]" }
-  shell("cd $config_dir; git init"); 
+  shell("cd $config_dir; %commands<git> init"); 
 
 }
 
 multi MAIN('git', 'remote', 'origin', Str $url) {
 
   if !path_exists($git_dir, 'd') { return say "Git repository not initialized. See ./dbsm git init" }
-  shell("cd $config_dir; git remote add origin $url"); 
+  shell("cd $config_dir; %commands<git> remote add origin $url"); 
   say "Remote origin [$url] added.";
 
 }
@@ -173,13 +178,13 @@ multi MAIN('git', 'remote', 'origin', Str $url) {
 multi MAIN('git', 'push') {
 
   if !path_exists($git_dir, 'd') { return say "Git repository not initialized. See ./dbsm git init" }
-  shell("cd $config_dir; git add .; git commit -a -m'[dbsm] updates'; git push -u origin master"); 
+  shell("cd $config_dir; %commands<git> add .; %commands<git> commit -a -m'[dbsm] updates'; %commands<git> push -u origin master"); 
 
 }
 
 multi MAIN('git', 'pull') {
 
   if !path_exists($git_dir, 'd') { return say "Git repository not initialized. See ./dbsm git init" }
-  shell("cd $config_dir; git pull origin master"); 
+  shell("cd $config_dir; %commands<git> pull origin master"); 
 
 }
