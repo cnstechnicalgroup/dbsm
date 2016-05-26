@@ -36,8 +36,8 @@ sub project_exists(Str $project_name) {
 }
 
 sub path_exists(Str $path, Str $type) {
-	if $type ~~ 'f' { return $path.IO ~~ :f }
-	if $type ~~ 'd' { return $path.IO ~~ :d }
+  if $type ~~ 'f' { return $path.IO ~~ :f }
+  if $type ~~ 'd' { return $path.IO ~~ :d }
 }
 
 sub script_path(Str $project_name, Str $script_name) {
@@ -90,13 +90,13 @@ multi MAIN('project', 'list') {
   if !path_exists($config_file, 'f') { return say "No projects exists. See ./dbsm init" }
   my $conf = Config::Simple.read($config_file, :f<ini>);
   for $conf.hash.keys.sort { .say }
-	#say "Project\t\tEnvironments";
-	#my %projects = [];
+  #say "Project\t\tEnvironments";
+  #my %projects = [];
   #for $conf.hash.keys.sort -> $project {
   # my @project = $project.split(' ');
-	#	%projects{@project[0]} = @project[1];
-	#}
-	#say %projects;
+  #  %projects{@project[0]} = @project[1];
+  #}
+  #say %projects;
 }
 
 multi MAIN('script', 'add', Str $project_name, Str $script_name;) {
