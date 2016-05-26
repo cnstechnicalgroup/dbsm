@@ -161,30 +161,22 @@ multi MAIN('script', 'list', Str $project_name) {
 }
 
 multi MAIN('git', 'init') {
-
   if path_exists($git_dir, 'd') { return say "Git repository already exists [$git_dir]" }
   shell("cd $config_dir; %commands<git> init"); 
-
 }
 
 multi MAIN('git', 'remote', 'origin', Str $url) {
-
   if !path_exists($git_dir, 'd') { return say "Git repository not initialized. See ./dbsm git init" }
   shell("cd $config_dir; %commands<git> remote add origin $url"); 
   say "Remote origin [$url] added.";
-
 }
 
 multi MAIN('git', 'push') {
-
   if !path_exists($git_dir, 'd') { return say "Git repository not initialized. See ./dbsm git init" }
   shell("cd $config_dir; %commands<git> add .; %commands<git> commit -a -m'[dbsm] updates'; %commands<git> push -u origin master"); 
-
 }
 
 multi MAIN('git', 'pull') {
-
   if !path_exists($git_dir, 'd') { return say "Git repository not initialized. See ./dbsm git init" }
   shell("cd $config_dir; %commands<git> pull origin master"); 
-
 }
