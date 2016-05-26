@@ -31,10 +31,14 @@ Usage
 ```
 Usage:
   ./bin/dbsm [--generate=<Any>] [--pw_len=<Any>] init <project_name> <environment> <db_type> 
-  ./bin/dbsm project list
+  ./bin/dbsm project list 
   ./bin/dbsm script add <project_name> <script_name> 
-  ./bin/dbsm script run <project_name> <environment> <script_name>
-  ./bin/dbsm script list <project_name>
+  ./bin/dbsm script run <project_name> <environment> <script_name> 
+  ./bin/dbsm script list <project_name> 
+  ./bin/dbsm git init 
+  ./bin/dbsm git remote origin <url> 
+  ./bin/dbsm git push 
+  ./bin/dbsm git pull
 ```
 
 Examples
@@ -77,6 +81,38 @@ Run a script under the context of a project's environment:
 ./bin/dbsm script list webapp1
 ```
 
+## Git init
+
+This will initialize `~/.dbsm` as a git repository.
+
+```
+./bin/dbsm git init
+```
+
+## Git add remote origin
+
+This will add a remote origin to the `~/.dbsm` repository.
+
+```
+./bin/dbsm git remote origin git@gitlab.com:somegroup/dbscripts.git
+```
+
+## Git push
+
+Push all new modifications to the remote origin
+
+```
+./bin/dbsm git push
+```
+
+## Git pull
+
+Pull the latest modifications from the remote origin
+
+```
+./bin/dbsm git pull
+```
+
 Installation
 ============
 
@@ -94,7 +130,6 @@ Todo
 * Add tests
 * Add `cp`, `mv` to scripts / projects
 * Add additional Database support
-* Add git support (`init`, `add remote`, `push`, `pull`)
 
 Requirements
 ============

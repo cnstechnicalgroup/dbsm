@@ -9,6 +9,7 @@ use Term::ANSIColor;
 my $config_dir = $*HOME ~ "/.dbsm";
 my $config_file = $config_dir ~ "/config";
 my $project_root = $config_dir ~ "/projects";
+my $git_dir = $config_dir ~ "/.git";
 
 # Pass
 my $pass_command = "/usr/bin/pass";
@@ -151,5 +152,34 @@ multi MAIN('script', 'list', Str $project_name) {
 
   my @scripts = dir $script_folder;
   for @scripts.sort { .split('/').tail.Str.say }
+
+}
+
+multi MAIN('git', 'init') {
+
+  if path_exists($git_dir, 'd') { return say "Git repository already exists [$git_dir]" }
+  shell("cd $config_dir; git init"); 
+
+}
+
+multi MAIN('git', 'remote', 'origin', Str $url) {
+
+  if !path_exists($git_dir, 'd') { return say "Git repository not initialized. See ./dbsm git init" }
+  shell("cd $config_dir; git remote add origin $url"); 
+  say "Remote origin [$url] added.";
+
+}
+
+multi MAIN('git', 'push') {
+
+  if !path_exists($git_dir, 'd') { return say "Git repository not initialized. See ./dbsm git init" }
+  shell("cd $config_dir; git add .; git commit -a -m'[dbsm] updates'; git push -u origin master"); 
+
+}
+
+multi MAIN('git', 'pull') {
+
+  if !path_exists($git_dir, 'd') { return say "Git repository not initialized. See ./dbsm git init" }
+  shell("cd $config_dir; git pull origin master"); 
 
 }
