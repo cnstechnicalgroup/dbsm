@@ -56,6 +56,24 @@ Specify the project name, environment, and database type. Environment naming con
 ```
 ./bin/dbsm project list
 ```
+## Echo variables
+
+This makes it simple to include `dbsm` in shell scripts in order to assign `project` parameters to local environment variables.
+
+```
+#!/bin/bash
+
+# Use configuration without password
+source <(./bin/dbsm project echovars webapp1 dev);
+
+# Use configuration with password
+source <(./bin/dbsm project echovars webapp1 dev echopass);
+
+echo "$DB_HOST";
+echo "$DB_NAME";
+echo "$DB_USERNAME";
+echo "$DB_PASSWORD";
+```
 
 ## Add / edit script to project
 

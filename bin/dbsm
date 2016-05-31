@@ -37,7 +37,8 @@ my $scripts_root = $config_dir ~ "/scripts";
 
 sub project_exists(Str $project_name) {
   my $conf = Config::Simple.read($config_file, :f<ini>);
-  return $conf.hash.keys.grep({ / $project_name / }).elems > 0;
+  my $exists = $conf.hash.keys.grep({ / $project_name / }).elems > 0;
+  if !$exists { return say("Project [$project_name] doesn't exist. See ./dbsm init") }
 }
 
 sub path_exists(Str $path, Str $type) {
@@ -102,6 +103,31 @@ multi MAIN('project', 'list') {
   #  %projects{@project[0]} = @project[1];
   #}
   #say %projects;
+}
+
+multi MAIN('project', 'echovars', Str $project_name, Str $environment, $echopass?) {
+
+  # Confirm project exists
+  project_exists "$project_name";
+
+  # Read config
+  my $conf = Config::Simple.read($config_file, :f<ini>);
+  my $db_host = $conf{"$project_name $environment"}<db_host>;
+  my $db_name = $conf{"$project_name $environment"}<db_name>;
+  my $user_name = $conf{"$project_name $environment"}<user_name>;
+
+  # Echo password?
+  my $pass;
+  if ($echopass) {
+    $pass = shell("$pass_show $pass_prefix/$project_name/$environment/$db_name/$user_name", :out).out.slurp-rest.chomp();
+  }
+
+  # Create env variables
+  say "DB_HOST=" ~ $db_host; 
+  say "DB_NAME=" ~ $db_name; 
+  say "DB_USERNAME=" ~ $user_name; 
+  if $echopass { say "DB_PASSWORD=" ~ $pass }
+
 }
 
 multi MAIN('script', 'add', Str $project_name, Str $script_name;) {
