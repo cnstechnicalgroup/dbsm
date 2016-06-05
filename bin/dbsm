@@ -1,208 +1,52 @@
 #!/usr/bin/env perl6
 
 use v6;
-use Config::Simple;
-use JSON::Tiny;
-use Term::ANSIColor;
+use DBSM;
 
 # Constants
 my $config_dir = $*HOME ~ "/.dbsm";
 my $config_file = $config_dir ~ "/config";
-my $project_root = $config_dir ~ "/projects";
 
-# Commands
-my %commands = git => "/usr/bin/env git",
-               pass => "/usr/bin/env pass";
+my $dbsm = DBSM.new(dir => $config_dir, file => $config_file);
 
-# DB commands
-my %dbs = mysql => "/usr/bin/env mysql",
-          pgsql => "/usr/bin/env psql",
-          mongo => "/usr/bin/env mongo",
-          redis => "/usr/bin/env redis-cli";
-
-# Git
-my $git_dir = $config_dir ~ "/.git";
-
-# Pass
-my $pass_generate = %commands<pass> ~ " generate -c ";
-my $pass_insert = %commands<pass> ~ " insert ";
-my $pass_edit = %commands<pass> ~ " edit ";
-my $pass_show = %commands<pass> ~ " show ";
-my $pass_pw_len = 40;
-my $pass_prefix = "dbsm";
-
-# Script Editor
-my $editor = "/usr/bin/env vim";
-my $scripts_root = $config_dir ~ "/scripts";
-
-sub project_exists(Str $project_name) {
-  my $conf = Config::Simple.read($config_file, :f<ini>);
-  my $exists = $conf.hash.keys.grep({ / $project_name / }).elems > 0;
-  if !$exists { return say("Project [$project_name] doesn't exist. See ./dbsm init") }
-}
-
-sub path_exists(Str $path, Str $type) {
-  if $type ~~ 'f' { return $path.IO ~~ :f }
-  if $type ~~ 'd' { return $path.IO ~~ :d }
-}
-
-sub script_path(Str $project_name, Str $script_name) {
-  my $script_folder = $scripts_root ~ "/$project_name";
-  if !path_exists($script_folder, 'd') { mkdir $script_folder }
-  return $script_folder ~ "/$script_name";
-}
-
-multi MAIN('init',
-           Str $project_name,
-           Str $environment,
-           Str $db_type where { so $db_type ∈ %dbs.keys },
-           :$generate?, :$pw_len?) {
-
-  my $conf;
-
-  # Create config entry
-  if (path_exists($config_file, 'f')) {
-    say "Reading from config...";
-    $conf = Config::Simple.read($config_file, :f<ini>);
-  } else {
-    say "Creating config...";
-    if !path_exists($config_dir, 'd') { mkdir $config_dir }
-    $conf = Config::Simple.new(:f<ini>);
-    $conf.filename = $config_file;
-  }
-
-  my $db_host = prompt("Please enter DB host: ");
-  my $db_name = prompt("Please enter DB name: ");
-  my $user_name = prompt("Please enter DB user_name: ");
-
-  $conf{"$project_name $environment"}<db_type> = $db_type;
-  $conf{"$project_name $environment"}<db_host> = $db_host;
-  $conf{"$project_name $environment"}<db_name> = $db_name;
-  $conf{"$project_name $environment"}<user_name> = $user_name;
-  $conf.write();
-
-  # Store password in pass
-  my $pass_entry = "$pass_prefix/$project_name/$environment/$db_name/$user_name";
-  if ($generate) {
-    my $len = $pw_len ?? $pw_len !! $pass_pw_len;
-    shell("$pass_generate $pass_entry $len");
-  } else {
-    shell("$pass_insert $pass_entry");
-  }
-
+multi MAIN( 'init', Str $project_name, Str $environment, Str $db_type, :$generate?, :$pw_len? ) {
+  $dbsm.init( $project_name, $environment, $db_type, :$generate, :$pw_len );
 }
 
 multi MAIN('project', 'list') {
-  if !path_exists($config_file, 'f') { return say "No projects exists. See ./dbsm init" }
-  my $conf = Config::Simple.read($config_file, :f<ini>);
-  for $conf.hash.keys.sort { .say }
-  #say "Project\t\tEnvironments";
-  #my %projects = [];
-  #for $conf.hash.keys.sort -> $project {
-  # my @project = $project.split(' ');
-  #  %projects{@project[0]} = @project[1];
-  #}
-  #say %projects;
+  my @project_list =  $dbsm.project_list();
+  for @project_list { .say } 
 }
 
 multi MAIN('project', 'echovars', Str $project_name, Str $environment, $echopass?) {
-
-  # Confirm project exists
-  project_exists "$project_name";
-
-  # Read config
-  my $conf = Config::Simple.read($config_file, :f<ini>);
-  my $db_host = $conf{"$project_name $environment"}<db_host>;
-  my $db_name = $conf{"$project_name $environment"}<db_name>;
-  my $user_name = $conf{"$project_name $environment"}<user_name>;
-
-  # Echo password?
-  my $pass;
-  if ($echopass) {
-    $pass = shell("$pass_show $pass_prefix/$project_name/$environment/$db_name/$user_name", :out).out.slurp-rest.chomp();
-  }
-
-  # Create env variables
-  say "DB_HOST=" ~ $db_host; 
-  say "DB_NAME=" ~ $db_name; 
-  say "DB_USERNAME=" ~ $user_name; 
-  if $echopass { say "DB_PASSWORD=" ~ $pass }
-
+  say $dbsm.project_echovars($project_name, $environment, $echopass);
 }
 
 multi MAIN('script', 'add', Str $project_name, Str $script_name;) {
-
-  if (!project_exists "$project_name") {
-    return say("Project [$project_name] doesn't exist. See ./dbsm init");
-  }
-
-  my $script_path = script_path $project_name, $script_name;
-  
-  if (path_exists $script_path, 'f') { 
-    my $to_edit = 'y';
-    $to_edit = prompt("Script already exists. Edit? (yN)");
-    return if $to_edit.match(/n|N/);
-  }
-
-  shell($editor ~ " $script_path");
-  say "New script, $script_path, added";
-
+  say $dbsm.script_add($project_name, $script_name);
 }
 
 multi MAIN('script', 'run', Str $project_name, Str $environment, Str $script_name) {
-
-  if (!project_exists "$project_name $environment") {
-    return say("Project [$project_name $environment] doesn't exist. See ./dbsm init");
-  }
-
-  my $script_path = script_path $project_name, $script_name;
-
-  if (!path_exists $script_path, 'f') {
-    return say("Script, $script_name, doesn't exist. See ./dbsm script run");
-  }
-
-  my $conf = Config::Simple.read($config_file, :f<ini>);
-  my $db_type = $conf{"$project_name $environment"}<db_type>;
-  my $db_host = $conf{"$project_name $environment"}<db_host>;
-  my $db_name = $conf{"$project_name $environment"}<db_name>;
-  my $user_name = $conf{"$project_name $environment"}<user_name>;
-
-  my $pass = shell("$pass_show $pass_prefix/$project_name/$environment/$db_name/$user_name", :out).out.slurp-rest.chomp();
-  shell(%dbs{$db_type} ~ " -h $db_host -u $user_name -p$pass $db_name < $script_path");
-
+  $dbsm.script_run($project_name, $environment, $script_name);
 }
 
 multi MAIN('script', 'list', Str $project_name) {
-
-  if (!project_exists "$project_name") {
-    return say("Project [$project_name] doesn't exist. See ./dbsm init");
-  }
-
-  my $script_folder = $scripts_root ~ "/$project_name";
-  if !path_exists($script_folder, 'd') { return say "No scripts available for $project_name." }
-
-  my @scripts = dir $script_folder;
-  for @scripts.sort { .split('/').tail.Str.say }
-
+  my @script_list = $dbsm.script_list($project_name);
+  for @script_list.sort { .split('/').tail.Str.say }
 }
 
 multi MAIN('git', 'init') {
-  if path_exists($git_dir, 'd') { return say "Git repository already exists [$git_dir]" }
-  shell("cd $config_dir; %commands<git> init"); 
+  say $dbsm.git_init();
 }
 
 multi MAIN('git', 'remote', 'origin', Str $url) {
-  if !path_exists($git_dir, 'd') { return say "Git repository not initialized. See ./dbsm git init" }
-  shell("cd $config_dir; %commands<git> remote add origin $url"); 
-  say "Remote origin [$url] added.";
+  say $dbsm.git_remote_origin($url);
 }
 
 multi MAIN('git', 'push') {
-  if !path_exists($git_dir, 'd') { return say "Git repository not initialized. See ./dbsm git init" }
-  shell("cd $config_dir; %commands<git> add .; %commands<git> commit -a -m'[dbsm] updates'; %commands<git> push -u origin master"); 
+  $dbsm.git_push();
 }
 
 multi MAIN('git', 'pull') {
-  if !path_exists($git_dir, 'd') { return say "Git repository not initialized. See ./dbsm git init" }
-  shell("cd $config_dir; %commands<git> pull origin master"); 
+  $dbsm.git_pull();
 }
