@@ -1,4 +1,4 @@
-dbsm
+dbsm [![Build Status](https://travis-ci.org/cnstechnicalgroup/dbsm.svg?branch=master)](https://travis-ci.org/cnstechnicalgroup/dbsm)
 ====
 
 `dbsm` is a cli DB script manager. It allows for easily managing ad-hoc DB scripts (SQL, NoSQL) as parts of projects and associated with managed `environment` configurations. 
