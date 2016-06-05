@@ -146,7 +146,7 @@ panda install .
 Todo
 ====
 
-* Add tests
+* Add tests (added basic tests)
 * Add `cp`, `mv` to scripts / projects
 * Add additional Database support
 
