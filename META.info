@@ -4,6 +4,6 @@
     "description" : "Multi-DB script manager / runner",
     "provides" : { "DBSM" : "lib/DBSM.pm6" },
     "author" : "Sam Morrison <sam@cnstechgroup.com>",
-    "depends" : [ "Config::Simple", "JSON::Tiny", "HTTP::UserAgent", "Term::ANSIColor", "IO::Socket::SSL" ],
+    "depends" : [ "Config::INI", "JSON::Tiny", "HTTP::UserAgent", "Term::ANSIColor", "IO::Socket::SSL" ],
     "source-url" : "git://github.com/cnstechnicalgroup/dbsm.git"
 }

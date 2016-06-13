@@ -1,5 +1,7 @@
 use v6;
-use Config::Simple;
+#use Config::Simple;
+use Config::INI;
+use Config::INI::Writer;
 use JSON::Tiny;
 
 class X::DBSM is Exception {
@@ -58,8 +60,8 @@ class DBSM {
   }
 
   method project_exists(Str $project_name) {
-    my $conf = Config::Simple.read($config_file, :f<ini>);
-    return $conf.hash.keys.grep({ / $project_name / }).elems > 0;
+    my %conf = Config::INI::parse_file($config_file);
+    return %conf.keys.grep({ / $project_name / }).elems > 0;
   }
 
   method path_exists(Str $path, Str $type) {
@@ -78,28 +80,26 @@ class DBSM {
              Str $db_type where { so $db_type ∈ %dbs.keys },
              :$generate?, :$pw_len?) is export {
 
-    my $conf;
+    my %conf;
 
     # Create config entry
     if (self.path_exists($config_file, 'f')) {
       say "Reading from config...";
-      $conf = Config::Simple.read($config_file, :f<ini>);
+      %conf = Config::INI::parse_file($config_file);
     } else {
       say "Creating config...";
       if !self.path_exists($config_dir, 'd') { mkdir $config_dir }
-      $conf = Config::Simple.new(:f<ini>);
-      $conf.filename = $config_file;
     }
 
     my $db_host = prompt("Please enter DB host: ");
     my $db_name = prompt("Please enter DB name: ");
     my $user_name = prompt("Please enter DB user_name: ");
 
-    $conf{"$project_name $environment"}<db_type> = $db_type;
-    $conf{"$project_name $environment"}<db_host> = $db_host;
-    $conf{"$project_name $environment"}<db_name> = $db_name;
-    $conf{"$project_name $environment"}<user_name> = $user_name;
-    $conf.write();
+    %conf{"$project_name $environment"}<db_type> = $db_type;
+    %conf{"$project_name $environment"}<db_host> = $db_host;
+    %conf{"$project_name $environment"}<db_name> = $db_name;
+    %conf{"$project_name $environment"}<user_name> = $user_name;
+    Config::INI::Writer::dumpfile(%conf, $config_file);
 
     # Store password in pass
     my $pass_entry = "$pass_prefix/$project_name/$environment/$db_name/$user_name";
@@ -114,8 +114,8 @@ class DBSM {
 
   method project_list {
     if !self.path_exists($config_file, 'f') { return say "No projects exists. See ./dbsm init" }
-    my $conf = Config::Simple.read($config_file, :f<ini>);
-    return $conf.hash.keys.sort
+    my %conf = Config::INI::parse_file($config_file);
+    return %conf.keys.sort
     #say "Project\t\tEnvironments";
     #my %projects = [];
     #for $conf.hash.keys.sort -> $project {
@@ -133,10 +133,10 @@ class DBSM {
     }
 
     # Read config
-    my $conf = Config::Simple.read($config_file, :f<ini>);
-    my $db_host = $conf{"$project_name $environment"}<db_host>;
-    my $db_name = $conf{"$project_name $environment"}<db_name>;
-    my $user_name = $conf{"$project_name $environment"}<user_name>;
+    my %conf = Config::INI::parse_file($config_file);
+    my $db_host = %conf{"$project_name $environment"}<db_host>;
+    my $db_name = %conf{"$project_name $environment"}<db_name>;
+    my $user_name = %conf{"$project_name $environment"}<user_name>;
 
     # Echo password?
     my $pass;
@@ -186,11 +186,11 @@ class DBSM {
       return say("Script, $script_name, doesn't exist. See ./dbsm script run");
     }
 
-    my $conf = Config::Simple.read($config_file, :f<ini>);
-    my $db_type = $conf{"$project_name $environment"}<db_type>;
-    my $db_host = $conf{"$project_name $environment"}<db_host>;
-    my $db_name = $conf{"$project_name $environment"}<db_name>;
-    my $user_name = $conf{"$project_name $environment"}<user_name>;
+    my %conf = Config::INI::parse_file($config_file);
+    my $db_type = %conf{"$project_name $environment"}<db_type>;
+    my $db_host = %conf{"$project_name $environment"}<db_host>;
+    my $db_name = %conf{"$project_name $environment"}<db_name>;
+    my $user_name = %conf{"$project_name $environment"}<user_name>;
 
     my $pass = shell("$pass_show $pass_prefix/$project_name/$environment/$db_name/$user_name", :out).out.slurp-rest.chomp();
     shell(%dbs{$db_type} ~ " -h $db_host -u $user_name -p$pass $db_name < $script_path");
