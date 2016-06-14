@@ -23,11 +23,31 @@ class DBSM {
   my %commands = git => "/usr/bin/env git",
                pass => "/usr/bin/env pass";
 
-  # DB commands
-  my %dbs = mysql => "/usr/bin/env mysql",
-          pgsql => "/usr/bin/env psql",
-          mongo => "/usr/bin/env mongo",
-          redis => "/usr/bin/env redis-cli";
+  sub escape ($str) {
+    # Puts a slash before non-alphanumeric characters
+    S:g[<-alpha -digit>] = "\\$/" given $str
+  }
+
+  # DB commands using code objects as templates
+  my %dbs = mysql => -> %params {qq:to/EOF/;
+                                  /usr/bin/env mysql %params<options> 
+                                  -h %params<db_host> 
+                                  -u %params<user_name> 
+                                  -p%params<pass> %params<db_name> < %params<script_path>
+                                  EOF
+                                 },
+            sqlcmd => -> %params {qq:to/EOF/;
+                                  /usr/bin/env sqlcmd %params<options> 
+                                  -S %params<db_host>
+                                  -U %params<user_name>
+                                  -P '%params<pass>'
+                                  -i %params<script_path>
+                                  -W -w 1024 -s'￥' -I
+                                  EOF
+                                 },
+	          pgsql => "/usr/bin/env psql",
+            mongo => "/usr/bin/env mongo",
+            redis => "/usr/bin/env redis-cli";
 
   # Git
   my $git_dir;
@@ -141,7 +161,7 @@ class DBSM {
     # Echo password?
     my $pass;
     if ($echopass) {
-      $pass = shell("$pass_show $pass_prefix/$project_name/$environment/$db_name/$user_name", :out).out.slurp-rest.chomp();
+      $pass = escape shell("$pass_show $pass_prefix/$project_name/$environment/$db_name/$user_name", :out).out.slurp-rest.chomp();
     }
 
     # Create env variables
@@ -187,13 +207,16 @@ class DBSM {
     }
 
     my %conf = Config::INI::parse_file($config_file);
-    my $db_type = %conf{"$project_name $environment"}<db_type>;
-    my $db_host = %conf{"$project_name $environment"}<db_host>;
-    my $db_name = %conf{"$project_name $environment"}<db_name>;
-    my $user_name = %conf{"$project_name $environment"}<user_name>;
+    my %params = db_type => %conf{"$project_name $environment"}<db_type>,
+                 db_host => %conf{"$project_name $environment"}<db_host>,
+                 db_name => %conf{"$project_name $environment"}<db_name>,
+                 user_name => %conf{"$project_name $environment"}<user_name>,
+                 options => '',
+                 script_path => $script_path;
 
-    my $pass = shell("$pass_show $pass_prefix/$project_name/$environment/$db_name/$user_name", :out).out.slurp-rest.chomp();
-    shell(%dbs{$db_type} ~ " -h $db_host -u $user_name -p$pass $db_name < $script_path");
+    my $pass_command = "$pass_show $pass_prefix/$project_name/$environment/%params<db_name>/%params<user_name>";
+    %params<pass> = shell($pass_command, :out).out.slurp-rest.chomp();
+    shell( %dbs{%params<db_type>}( %params ).subst(/\n/, ' ', :g) );
 
   }
 
