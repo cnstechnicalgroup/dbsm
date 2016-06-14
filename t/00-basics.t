@@ -12,6 +12,6 @@ my $config_dir = $*HOME ~ "/.dbsm";
 my $config_file = $config_dir ~ "/config";
 
 # new
-my $r1 = DBSM.new(dir => $config_dir, file => $config_file);
+my $r1 = DBSM.new(config_file => $config_file);
 
 isa-ok $r1, DBSM, 'new 3/3';

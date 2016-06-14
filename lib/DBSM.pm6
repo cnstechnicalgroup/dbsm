@@ -15,8 +15,9 @@ class X::DBSM is Exception {
 
 class DBSM {
 
-  my $config_dir;
-  my $config_file;
+  has $.config_dir is rw;
+  has $.config_file is rw;
+  #my $.config_file;
   my $project_root;
 
   # Commands
@@ -53,34 +54,42 @@ class DBSM {
   my $git_dir;
 
   # Pass
-  my $pass_generate = %commands<pass> ~ " generate -c ";
-  my $pass_insert = %commands<pass> ~ " insert ";
-  my $pass_edit = %commands<pass> ~ " edit ";
-  my $pass_show = %commands<pass> ~ " show ";
-  my $pass_pw_len = 40;
-  my $pass_prefix = "dbsm";
+  my $pass_generate;
+  my $pass_insert;
+  my $pass_edit;
+  my $pass_show;
+  my $pass_pw_len;
+  my $pass_prefix;
 
   # Script Editor
-  my $editor = "/usr/bin/env vim";
+  my $editor;
   my $scripts_root;
 
 
-  method BUILD(Str :$dir, Str :$file) {
-    $config_dir = $dir;
-    $config_file = $file;
-    $project_root = $config_dir ~ "/projects";
+  method BUILD(Str :$config_file) {
+    $.config_file = $config_file;
+    $.config_dir = IO::Path.new("$.config_file").parent.Str; 
+    $project_root = $.config_dir ~ "/projects";
 
     # Git
-    $git_dir = $config_dir ~ "/.git";
+    $git_dir = $.config_dir ~ "/.git";
 
     # Script Editor
     $editor = "/usr/bin/env vim";
-    $scripts_root = $config_dir ~ "/scripts";
+    $scripts_root = $.config_dir ~ "/scripts";
+
+    # Pass
+    $pass_generate = %commands<pass> ~ " generate -c ";
+    $pass_insert = %commands<pass> ~ " insert ";
+    $pass_edit = %commands<pass> ~ " edit ";
+    $pass_show = %commands<pass> ~ " show ";
+    $pass_pw_len = 40;
+    $pass_prefix = "dbsm";
 
   }
 
   method project_exists(Str $project_name) {
-    my %conf = Config::INI::parse_file($config_file);
+    my %conf = Config::INI::parse_file($.config_file);
     return %conf.keys.grep({ / $project_name / }).elems > 0;
   }
 
@@ -103,12 +112,12 @@ class DBSM {
     my %conf;
 
     # Create config entry
-    if (self.path_exists($config_file, 'f')) {
+    if (self.path_exists($.config_file, 'f')) {
       say "Reading from config...";
-      %conf = Config::INI::parse_file($config_file);
+      %conf = Config::INI::parse_file($.config_file);
     } else {
       say "Creating config...";
-      if !self.path_exists($config_dir, 'd') { mkdir $config_dir }
+      if !self.path_exists($.config_dir, 'd') { mkdir $.config_dir }
     }
 
     my $db_host = prompt("Please enter DB host: ");
@@ -119,7 +128,7 @@ class DBSM {
     %conf{"$project_name $environment"}<db_host> = $db_host;
     %conf{"$project_name $environment"}<db_name> = $db_name;
     %conf{"$project_name $environment"}<user_name> = $user_name;
-    Config::INI::Writer::dumpfile(%conf, $config_file);
+    Config::INI::Writer::dumpfile(%conf, $.config_file);
 
     # Store password in pass
     my $pass_entry = "$pass_prefix/$project_name/$environment/$db_name/$user_name";
@@ -133,8 +142,8 @@ class DBSM {
   }
 
   method project_list {
-    if !self.path_exists($config_file, 'f') { return say "No projects exists. See ./dbsm init" }
-    my %conf = Config::INI::parse_file($config_file);
+    if !self.path_exists($.config_file, 'f') { return say "No projects exists. See ./dbsm init" }
+    my %conf = Config::INI::parse_file($.config_file);
     return %conf.keys.sort
     #say "Project\t\tEnvironments";
     #my %projects = [];
@@ -153,7 +162,8 @@ class DBSM {
     }
 
     # Read config
-    my %conf = Config::INI::parse_file($config_file);
+    say $.config_file;
+    my %conf = Config::INI::parse_file($.config_file);
     my $db_host = %conf{"$project_name $environment"}<db_host>;
     my $db_name = %conf{"$project_name $environment"}<db_name>;
     my $user_name = %conf{"$project_name $environment"}<user_name>;
@@ -207,7 +217,7 @@ class DBSM {
       return say("Script, $script_name, doesn't exist. See ./dbsm script run");
     }
 
-    my %conf = Config::INI::parse_file($config_file);
+    my %conf = Config::INI::parse_file($.config_file);
     my %params = db_type => %conf{"$project_name $environment"}<db_type>,
                  db_host => %conf{"$project_name $environment"}<db_host>,
                  db_name => %conf{"$project_name $environment"}<db_name>,
@@ -237,12 +247,12 @@ class DBSM {
 
   method git_init is export {
     if self.path_exists($git_dir, 'd') { return "Git repository already exists [$git_dir]" }
-    shell("cd $config_dir; %commands<git> init"); 
+    shell("cd $.config_dir; %commands<git> init"); 
   }
 
   method git_remote_origin(Str $url) is export {
     if !self.path_exists($git_dir, 'd') { return "Git repository not initialized. See ./dbsm git init" }
-    my @out = shell("cd $config_dir; %commands<git> remote add origin $url 2>&1", :out).out.slurp-rest.chomp(); 
+    my @out = shell("cd $.config_dir; %commands<git> remote add origin $url 2>&1", :out).out.slurp-rest.chomp(); 
     # Return error message if returned
     return @out.Str if @out.Str !~~ '';
     return "Remote origin [$url] added.";
@@ -250,12 +260,12 @@ class DBSM {
 
   method git_push is export {
     if !self.path_exists($git_dir, 'd') { return "Git repository not initialized. See ./dbsm git init" }
-    shell("cd $config_dir; %commands<git> add .; %commands<git> commit -a -m'[dbsm] updates'; %commands<git> push -u origin master").exitcode(); 
+    shell("cd $.config_dir; %commands<git> add .; %commands<git> commit -a -m'[dbsm] updates'; %commands<git> push -u origin master").exitcode(); 
   }
 
   method git_pull is export {
     if !self.path_exists($git_dir, 'd') { return "Git repository not initialized. See ./dbsm git init" }
-    shell("cd $config_dir; %commands<git> pull origin master"); 
+    shell("cd $.config_dir; %commands<git> pull origin master"); 
   }
 
 }
