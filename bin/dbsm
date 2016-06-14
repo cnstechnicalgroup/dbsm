@@ -19,7 +19,16 @@ multi MAIN('project', 'list') {
 }
 
 multi MAIN('project', 'echovars', Str $project_name, Str $environment, $echopass?) {
-  say $dbsm.project_echovars($project_name, $environment, $echopass);
+  my %project_vars = $dbsm.project_vars($project_name, $environment, $echopass);
+
+  # Create env variables
+  my $project_vars = "DB_HOST=" ~ %project_vars<db_host>; 
+  $project_vars = $project_vars ~ "\nDB_NAME=" ~ %project_vars<db_name>;
+  $project_vars = $project_vars ~ "\nDB_USERNAME=" ~ %project_vars<db_username>; 
+  if %project_vars<db_password>.defined { 
+    $project_vars = $project_vars ~ "\nDB_PASSWORD=" ~ %project_vars<db_password>
+  }
+  say $project_vars;
 }
 
 multi MAIN('script', 'add', Str $project_name, Str $script_name;) {

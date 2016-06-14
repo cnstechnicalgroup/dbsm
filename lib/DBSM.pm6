@@ -96,9 +96,9 @@ class DBSM {
   }
 
   method init(  Str $project_name,
-             Str $environment,
-             Str $db_type where { so $db_type ∈ %dbs.keys },
-             :$generate?, :$pw_len?) is export {
+                Str $environment,
+                Str $db_type where { so $db_type ∈ %dbs.keys },
+                :$generate?, :$pw_len?) is export {
 
     my %conf;
 
@@ -145,7 +145,7 @@ class DBSM {
     #say %projects;
   }
 
-  method project_echovars(Str $project_name, Str $environment, $echopass?) {
+  method project_vars(Str $project_name, Str $environment, $echopass?) {
 
     # Confirm project exists
     if ( !self.project_exists("$project_name $environment") ) {
@@ -165,13 +165,14 @@ class DBSM {
     }
 
     # Create env variables
-    my $project_vars = "DB_HOST=" ~ $db_host; 
-    $project_vars = $project_vars ~ "\nDB_NAME=" ~ $db_name;
-    $project_vars = $project_vars ~ "\nDB_USERNAME=" ~ $user_name; 
+    my %project_vars = db_host => $db_host,
+                       db_name => $db_name,
+                       db_username => $user_name;
     if $echopass { 
-      $project_vars = $project_vars ~ "\nDB_PASSWORD=" ~ $pass
+      %project_vars<db_password> = $pass;
     }
-    return $project_vars;
+
+    return %project_vars;
 
   }
 
