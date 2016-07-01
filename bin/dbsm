@@ -7,19 +7,22 @@ use DBSM;
 my $config_dir = $*HOME ~ "/.dbsm";
 my $config_file = $config_dir ~ "/config";
 
-my $dbsm = DBSM.new(config_file => $config_file);
+#my $dbsm = DBSM.new(config_file => $config_file);
+
+# Set config
+DBSM::config($config_file);
 
 multi MAIN( 'init', Str $project_name, Str $environment, Str $db_type, :$generate?, :$pw_len? ) {
-  $dbsm.init( $project_name, $environment, $db_type, :$generate, :$pw_len );
+  DBSM::init( $project_name, $environment, $db_type, :$generate, :$pw_len );
 }
 
 multi MAIN('project', 'list') {
-  my @project_list =  $dbsm.project_list();
+  my @project_list = DBSM::project_list;
   for @project_list { .say } 
 }
 
 multi MAIN('project', 'echovars', Str $project_name, Str $environment, $echopass?) {
-  my %project_vars = $dbsm.project_vars($project_name, $environment, $echopass);
+  my %project_vars = DBSM::project_vars($project_name, $environment, $echopass);
 
   # Create env variables
   my $project_vars = "DB_HOST=" ~ %project_vars<db_host>; 
@@ -32,30 +35,30 @@ multi MAIN('project', 'echovars', Str $project_name, Str $environment, $echopass
 }
 
 multi MAIN('script', 'add', Str $project_name, Str $script_name;) {
-  say $dbsm.script_add($project_name, $script_name);
+  say DBSM::script_add($project_name, $script_name);
 }
 
 multi MAIN('script', 'run', Str $project_name, Str $environment, Str $script_name) {
-  $dbsm.script_run($project_name, $environment, $script_name);
+  DBSM::script_run($project_name, $environment, $script_name);
 }
 
 multi MAIN('script', 'list', Str $project_name) {
-  my @script_list = $dbsm.script_list($project_name);
+  my @script_list = DBSM::script_list($project_name);
   for @script_list.sort { .split('/').tail.Str.say }
 }
 
 multi MAIN('git', 'init') {
-  say $dbsm.git_init();
+  say DBSM::git_init;
 }
 
 multi MAIN('git', 'remote', 'origin', Str $url) {
-  say $dbsm.git_remote_origin($url);
+  say DBSM::git_remote_origin($url);
 }
 
 multi MAIN('git', 'push') {
-  $dbsm.git_push();
+  DBSM::git_push;
 }
 
 multi MAIN('git', 'pull') {
-  $dbsm.git_pull();
+  DBSM::git_pull;
 }
