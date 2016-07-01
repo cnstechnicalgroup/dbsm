@@ -10,7 +10,9 @@ my $config_file = $config_dir ~ "/config";
 #my $dbsm = DBSM.new(config_file => $config_file);
 
 # Set config
-DBSM::config($config_file);
+my $var = DBSM::config($config_file);
+
+say $var.WHAT;
 
 multi MAIN( 'init', Str $project_name, Str $environment, Str $db_type, :$generate?, :$pw_len? ) {
   DBSM::init( $project_name, $environment, $db_type, :$generate, :$pw_len );

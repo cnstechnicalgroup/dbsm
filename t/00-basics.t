@@ -1,17 +1,18 @@
 use Test;
-
 use DBSM;
 
 plan 2;
 
 # use
-use-ok('DBSM');
+use-ok 'DBSM', 'use 1/2';
 
 # Constants
 my $config_dir = $*HOME ~ "/.dbsm";
 my $config_file = $config_dir ~ "/config";
 
-# new
-my $r1 = DBSM.new(config_file => $config_file);
+# Set config
 
-isa-ok $r1, DBSM, 'new 3/3';
+# use config
+my $r1 = DBSM::config($config_file);
+
+isa-ok $r1, (Str), 'config 2/2';

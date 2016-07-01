@@ -1,9 +1,10 @@
 {
+    "perl" : "6.c",
     "name" : "dbsm",
-    "version"  : "0.0.1",
+    "version"  : "0.0.2",
     "description" : "Multi-DB script manager / runner",
     "provides" : { "DBSM" : "lib/DBSM.pm6" },
-    "author" : "Sam Morrison <sam@cnstechgroup.com>",
-    "depends" : [ "Config::INI", "JSON::Tiny", "HTTP::UserAgent", "Term::ANSIColor", "IO::Socket::SSL" ],
+    "authors" : [ "Sam Morrison <sam@cnstechgroup.com>" ],
+    "depends" : [ "Config::INI", "JSON::Tiny", "HTTP::UserAgent", "Term::ANSIColor", "IO::Socket::SSL", "Test::META" ],
     "source-url" : "git://github.com/cnstechnicalgroup/dbsm.git"
 }
