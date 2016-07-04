@@ -7,15 +7,15 @@ use JSON::Tiny;
 
 # Config basics
 our $config_file;
-our $config_dir;
-our $project_root;
+my $config_dir;
+my $project_root;
 
 # Commands
-our %commands = git => "/usr/bin/env git",
+my %commands = git => "/usr/bin/env git",
              pass => "/usr/bin/env pass";
 
 # DB commands using code objects as templates
-our %dbs = mysql => -> %params {qq:to/EOF/;
+my %dbs = mysql => -> %params {qq:to/EOF/;
                                 /usr/bin/env mysql %params<options> 
                                 -h %params<db_host> 
                                 -u %params<user_name> 
@@ -36,19 +36,19 @@ our %dbs = mysql => -> %params {qq:to/EOF/;
           redis => "/usr/bin/env redis-cli";
 
 # Git
-our $git_dir;
+my $git_dir;
 
 # Pass
-our $pass_generate;
-our $pass_insert;
-our $pass_edit;
-our $pass_show;
-our $pass_pw_len;
-our $pass_prefix;
+my $pass_generate;
+my $pass_insert;
+my $pass_edit;
+my $pass_show;
+my $pass_pw_len;
+my $pass_prefix;
 
 # Script Editor
-our $editor;
-our $scripts_root;
+my $editor;
+my $scripts_root;
 
 sub escape ($str) {
   # Puts a slash before non-alphanumeric characters
