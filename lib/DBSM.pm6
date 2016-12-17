@@ -102,9 +102,9 @@ our sub config(Str $config) {
 }
 
 our sub init( Str $config_file, 
-          Str $project_name,
-          Str $environment,
-          Str $db_type where { so $db_type ∈ %dbs.keys },
+              Str $project_name,
+              Str $environment,
+              Str $db_type where { so $db_type ∈ %dbs.keys },
               :$generate?, :$pw_len?) {
 
   my %conf;

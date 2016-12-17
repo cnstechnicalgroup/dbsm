@@ -16,7 +16,7 @@ multi MAIN( 'init',
             Str $db_type,
             :$generate?, :$pw_len? ) {
 
-  DBSM::init( $project_name, $environment, $db_type, :$generate, :$pw_len );
+  DBSM::init( $config_file, $project_name, $environment, $db_type, :$generate, :$pw_len );
 
 }
 
